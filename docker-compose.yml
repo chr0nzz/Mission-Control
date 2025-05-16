@@ -70,7 +70,7 @@ services:
     container_name: mission-control-mqtt
     ports:
       - "1883:1883" # Standard MQTT port
-      - "9001:9001" # WebSocket port (optional, but useful for browser clients)
+      - "19001:9001" # WebSocket port (optional, but useful for browser clients) - Changed host port to 19001
     volumes:
       - mqtt_data:/mosquitto/data # Persistent data volume
       - mqtt_log:/mosquitto/log   # Persistent log volume
