@@ -6,7 +6,7 @@ services:
       context: ./backend
       dockerfile: ../docker/Dockerfile.backend
     ports:
-      - "55726:55726" # Map host port 55726 to container port 55726
+      - "155726:55726" # Map host port 155726 to container port 55726 - Changed host port to 155726
     volumes:
       - backend_config:/app/config # Volume for backend configuration (e.g., YAML)
       - sqlite_data:/app/data # Volume for SQLite database
