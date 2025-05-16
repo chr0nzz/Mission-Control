@@ -112,6 +112,12 @@ initDatabase()
 const configurationService = new ConfigurationService();
 const apiProxyService = new ApiProxyService();
 const widgetManagementService = new WidgetManagementService();
+const MqttService = require('./services/MqttService');
+const mqttService = new MqttService();
+
+mqttService.connect()
+  .then(() => console.log('MQTT service connected'))
+  .catch(err => console.error('Failed to connect to MQTT:', err));
 
     // --- Backend API Routes ---
 
