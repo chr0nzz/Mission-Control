@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useTheme } from '@/components/theme-provider' // Assuming this path is correct for theme context
+import { useTheme } from '@/components/theme-provider.jsx' // Assuming this path is correct for theme context
 import { availableDarkVariants, availableAccentColors } from '@/lib/theme-options' // Assuming this path is correct for theme options
 
 export default function Settings() {
