@@ -215,39 +215,39 @@ function Settings() {
 
 
   return (
-    &lt;div className="container mx-auto p-4"&gt;
-      &lt;h2 className="text-2xl font-bold mb-4"&gt;Settings&lt;/h2&gt;
+    <div className="container mx-auto p-4">
+      <h2 className="text-2xl font-bold mb-4">Settings</h2>
 
       {/* Global Settings Section */}
-      &lt;section className="mb-8 p-4 border border-gray-300 dark:border-gray-700 rounded-lg"&gt;
-        &lt;h3 className="text-xl font-semibold mb-3"&gt;Global Settings&lt;/h3&gt;
-        &lt;p className="text-gray-600 dark:text-gray-400 mb-4"&gt;Configure application-wide settings like default theme, NTfy server, etc.&lt;/p&gt;
+      <section className="mb-8 p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
+        <h3 className="text-xl font-semibold mb-3">Global Settings</h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">Configure application-wide settings like default theme, NTfy server, etc.</p>
 
         {/* Theme Mode (Light/Dark/Auto) */}
-        &lt;div className="mb-4"&gt;
-          &lt;label htmlFor="theme_mode" className="block text-sm font-medium text-gray-700 dark:text-gray-300"&gt;Theme Mode&lt;/label&gt;
-          &lt;select
+        <div className="mb-4">
+          <label htmlFor="theme_mode" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Theme Mode</label>
+          <select
             id="theme_mode"
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
             value={theme.mode}
             onChange={(e) => handleThemeChange(e.target.value)}
-          &gt;
-            &lt;option value="light"&gt;Light&lt;/option&gt;
-            &lt;option value="dark"&gt;Dark&lt;/option&gt;
-            &lt;option value="auto"&gt;Auto (OS Preference)&lt;/option&gt;
-          &lt;/select&gt;
-        &lt;/div&gt;
+          >
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="auto">Auto (OS Preference)</option>
+          </select>
+        </div>
 
         {/* Dark Mode Variant (if theme.mode is 'dark') */}
         {theme.mode === 'dark' && (
-           &lt;div className="mb-4"&gt;
-             &lt;label htmlFor="dark_variant" className="block text-sm font-medium text-gray-700 dark:text-gray-300"&gt;Dark Mode Background&lt;/label&gt;
-             &lt;select
+           <div className="mb-4">
+             <label htmlFor="dark_variant" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Dark Mode Background</label>
+             <select
                id="dark_variant"
                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                value={theme.darkVariant}
                onChange={(e) => handleDarkVariantChange(e.target.value)}
-             &gt;
+             >
                {availableDarkVariants.map(variant => (
                   &lt;option key={variant.value} value={variant.value}&gt;{variant.label}&lt;/option&gt;
                ))}
