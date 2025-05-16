@@ -25,6 +25,14 @@ export default function ServiceSettings() {
       apiKey: '',
     });
   };
+const handleDeleteService = (id) => {
+    setServices(services.filter((service) => service.id !== id));
+  };
+
+  const handleEditService = (id) => {
+    // Edit service logic here
+    console.log(`Edit service with id: ${id}`);
+  };
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           Add, edit, and manage connections to your self-hosted services.
         </p>
@@ -90,8 +98,24 @@ export default function ServiceSettings() {
       <h3 className="text-xl font-semibold mt-6 mb-3">Configured Services</h3>
       <ul>
         {services.map((service) => (
-          <li key={service.id}>
-            {service.serviceName} ({service.serviceType}) - {service.serviceUrl}
+          <li key={service.id} className="flex items-center justify-between py-2">
+            <div>
+              {service.serviceName} ({service.serviceType}) - {service.serviceUrl}
+            </div>
+            <div>
+              <button
+                className="ml-2 text-red-500 hover:text-red-700"
+                onClick={() => handleDeleteService(service.id)}
+              >
+                Delete
+              </button>
+              <button
+                className="ml-2 text-blue-500 hover:text-blue-700"
+                onClick={() => handleEditService(service.id)}
+              >
+                Edit
+              </button>
+            </div>
           </li>
         ))}
       </ul>
