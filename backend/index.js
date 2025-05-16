@@ -113,6 +113,8 @@ const configurationService = new ConfigurationService();
 const apiProxyService = new ApiProxyService();
 const widgetManagementService = new WidgetManagementService();
 const MqttService = require('./services/MqttService');
+const BackupRestoreService = require('./services/BackupRestoreService');
+const backupRestoreService = new BackupRestoreService();
 const mqttService = new MqttService();
 
 mqttService.connect()
