@@ -40,7 +40,7 @@ services:
       - backend # Frontend needs the backend to be available
 
   socket-proxy:
-    image: linuxserver/docker-socket-proxy:latest
+    image: tecnativa/docker-socket-proxy
     container_name: mission-control-socket-proxy
     environment:
       # Configure for read-only access as per Section 4.4
