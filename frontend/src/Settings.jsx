@@ -138,6 +138,15 @@ export default function Settings() {
         </div>
       </section>
 
+      {/* Service Configuration Section */}
+      <section className="mb-8 p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
+        <h3 className="text-xl font-semibold mb-3">Service Configuration</h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          Add, edit, and manage connections to your self-hosted services.
+        </p>
+        <p>Service Configuration UI will be implemented here.</p>
+      </section>
+
       {/* Widget Management */}
       <section className="p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
         <h3 className="text-xl font-semibold mb-3">Custom Widgets</h3>
@@ -159,6 +168,15 @@ export default function Settings() {
             </li>
           ))}
         </ul>
+      </section>
+
+      {/* Backup & Restore Section */}
+      <section className="p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
+        <h3 className="text-xl font-semibold mb-3">Backup &amp; Restore</h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          Create backups of your settings and data, and restore from a previous backup.
+        </p>
+        <p>Backup &amp; Restore UI will be implemented here.</p>
       </section>
     </div>
   )
