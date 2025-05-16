@@ -39,7 +39,7 @@ async function initDatabase() {
             console.log('Foreign key constraints enabled.');
 
             // SQL statements to create tables based on readme.md schema
-            const createTablesSql = \`
+            const createTablesSql = `
               CREATE TABLE IF NOT EXISTS Users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
