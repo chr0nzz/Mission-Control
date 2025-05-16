@@ -4,7 +4,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: ./docker/Dockerfile.backend
+      dockerfile: ../docker/Dockerfile.backend
     ports:
       - "55726:55726" # Map host port 55726 to container port 55726
     volumes:
@@ -28,7 +28,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: ./docker/Dockerfile.frontend
+      dockerfile: ../docker/Dockerfile.frontend
     ports:
       - "54976:80" # Map host port 54976 to container port 80 (Nginx default)
     environment:
