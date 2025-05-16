@@ -4,6 +4,7 @@ const path = require('path');
 const ConfigurationService = require('./services/ConfigurationService'); // Import the ConfigurationService
 const ApiProxyService = require('./services/ApiProxyService'); // Import the ApiProxyService
 const WidgetService = require('./services/WidgetService'); // Import the WidgetService
+const WidgetManagementService = require('./services/WidgetManagementService');
 const UserService = require('./services/UserService'); // Import the UserService
 const DashboardService = require('./services/DashboardService'); // Import the DashboardService
 
@@ -107,6 +108,18 @@ initDatabase()
   .then(() => {
     // TODO: Implement loading initial configuration from YAML if needed here
     // (Based on readme, YAML is more for static app config, SQLite for user/widget config)
+// Initialize services
+const configurationService = new ConfigurationService();
+const apiProxyService = new ApiProxyService();
+const widgetManagementService = new WidgetManagementService();
+const MqttService = require('./services/MqttService');
+const BackupRestoreService = require('./services/BackupRestoreService');
+const backupRestoreService = new BackupRestoreService();
+const mqttService = new MqttService();
+
+mqttService.connect()
+  .then(() => console.log('MQTT service connected'))
+  .catch(err => console.error('Failed to connect to MQTT:', err));
 
     // --- Backend API Routes ---
 
