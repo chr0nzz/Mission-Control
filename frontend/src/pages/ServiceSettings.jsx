@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 export default function ServiceSettings() {
   const [services, setServices] = useState([]);
   const [newService, setNewService] = useState({
+const [editingServiceId, setEditingServiceId] = useState(null);
     serviceType: 'Sonarr',
     serviceName: '',
     serviceUrl: '',
@@ -17,7 +18,16 @@ export default function ServiceSettings() {
   });
 
   const handleAddService = () => {
-    setServices([...services, { ...newService, id: uuidv4() }]);
+    if (editingServiceId) {
+      setServices(
+        services.map((service) =>
+          service.id === editingServiceId ? { ...newService, id: editingServiceId } : service
+        )
+      );
+      setEditingServiceId(null);
+    } else {
+      setServices([...services, { ...newService, id: uuidv4() }]);
+    }
     setNewService({
       serviceType: 'Sonarr',
       serviceName: '',
@@ -30,8 +40,16 @@ const handleDeleteService = (id) => {
   };
 
   const handleEditService = (id) => {
-    // Edit service logic here
-    console.log(`Edit service with id: ${id}`);
+    setEditingServiceId(id);
+    const serviceToEdit = services.find((service) => service.id === id);
+    if (serviceToEdit) {
+      setNewService({
+        serviceType: serviceToEdit.serviceType,
+        serviceName: serviceToEdit.serviceName,
+        serviceUrl: serviceToEdit.serviceUrl,
+        apiKey: serviceToEdit.apiKey,
+      });
+    }
   };
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           Add, edit, and manage connections to your self-hosted services.
@@ -91,7 +109,7 @@ const handleDeleteService = (id) => {
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={handleAddService}
         >
-          Add Service
+          {editingServiceId ? 'Update Service' : 'Add Service'}
         </button>
       </div>
 
