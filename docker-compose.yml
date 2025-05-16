@@ -1,0 +1,91 @@
+
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    ports:
+      - "8888:55726" # Map host port 8888 to container port 55726
+    volumes:
+      - backend_config:/app/config # Volume for backend configuration (e.g., YAML)
+      - sqlite_data:/app/data # Volume for SQLite database
+      - custom_widgets:/app/custom_widgets # Volume for custom widget files
+    environment:
+      # Example environment variables - replace with actual secrets management later
+      - NODE_ENV=development
+      - BACKEND_PORT=55726
+      - SQLITE_DB_PATH=/app/data/missioncontrol.db
+      - MQTT_BROKER_URL=mqtt://mqtt:1883
+      - DOCKER_SOCKET_PROXY_URL=tcp://socket-proxy:2375
+      # Add environment variables for API keys and secrets here, managed securely
+    networks:
+      - mission-control-net
+    depends_on:
+      - mqtt
+      - socket-proxy # Backend needs the socket proxy to be available
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    ports:
+      - "8080:80" # Map host port 8080 to container port 80 (Nginx default)
+    environment:
+      # Frontend environment variables (e.g., backend API URL)
+      - VITE_BACKEND_API_URL=http://localhost:55726 # Use localhost for host access, or backend service name if accessing from another container on the same network
+    networks:
+      - mission-control-net
+    depends_on:
+      - backend # Frontend needs the backend to be available
+
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: mission-control-socket-proxy
+    environment:
+      # Configure for read-only access as per Section 4.4
+      - CONTAINERS=1 # Allow access to /containers endpoints (for list, inspect, logs, stats)
+      - EVENTS=1     # Allow access to /events endpoint (for real-time events)
+      - POST=0       # Crucially, disallow POST requests (no start, stop, create, etc.)
+      # Explicitly disable other potentially dangerous API sections
+      - EXEC=0
+      - BUILD=0
+      - IMAGES=0
+      - VOLUMES=0
+      - NETWORKS=0
+      - SERVICES=0
+      - SECRETS=0
+      - CONFIGS=0
+      - NODES=0
+      - SWARM=0
+      - DISTRIBUTION=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Mount the host Docker socket (read-only for the proxy itself)
+    networks:
+      - mission-control-net
+    restart: unless-stopped # Ensure the proxy restarts if it crashes
+
+  mqtt:
+    image: eclipse-mosquitto:latest # Using Mosquitto as a simple MQTT broker
+    container_name: mission-control-mqtt
+    ports:
+      - "1883:1883" # Standard MQTT port
+      - "19001:9001" # WebSocket port (optional, but useful for browser clients) - Changed host port to 19001
+    volumes:
+      - mqtt_data:/mosquitto/data # Persistent data volume
+      - mqtt_log:/mosquitto/log   # Persistent log volume
+      # Add mosquitto.conf volume if custom configuration is needed
+    networks:
+      - mission-control-net
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
+  backend_config:
+  custom_widgets:
+  mqtt_data:
+  mqtt_log:
+
+networks:
+  mission-control-net:
+    driver: bridge
