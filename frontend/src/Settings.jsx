@@ -1,8 +1,6 @@
-'use client'
-
 import { useEffect, useState } from 'react'
-import { useTheme } from '@/components/theme-provider'
-import { availableDarkVariants, availableAccentColors } from '@/lib/theme-options'
+import { useTheme } from '@/components/theme-provider' // Assuming this path is correct for theme context
+import { availableDarkVariants, availableAccentColors } from '@/lib/theme-options' // Assuming this path is correct for theme options
 
 export default function Settings() {
   const { theme, setTheme } = useTheme()
@@ -19,19 +17,19 @@ export default function Settings() {
     { id: 'weather', name: 'Weather', enabled: false },
   ])
 
-  const handleThemeChange = (mode: string) => {
+  const handleThemeChange = (mode) => {
     setTheme({ ...theme, mode })
   }
 
-  const handleDarkVariantChange = (variant: string) => {
+  const handleDarkVariantChange = (variant) => {
     setTheme({ ...theme, darkVariant: variant })
   }
 
-  const handleAccentColorChange = (color: string) => {
+  const handleAccentColorChange = (color) => {
     setTheme({ ...theme, accentColor: color })
   }
 
-  const handleWidgetToggle = (id: string) => {
+  const handleWidgetToggle = (id) => {
     const updated = widgets.map(widget =>
       widget.id === id ? { ...widget, enabled: !widget.enabled } : widget
     )
