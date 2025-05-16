@@ -39,7 +39,7 @@ async function initDatabase() {
             console.log('Foreign key constraints enabled.');
 
             // SQL statements to create tables based on readme.md schema
-            const createTablesSql = \`
+            const createTablesSql = `
               CREATE TABLE IF NOT EXISTS Users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
@@ -83,7 +83,7 @@ async function initDatabase() {
                 service_type TEXT,
                 service_instance_id TEXT
               );
-            \`;
+            `;
 
             // Run the table creation SQL
             db.exec(createTablesSql, (execErr) => {
@@ -158,7 +158,7 @@ initDatabase()
         const { key } = req.params;
         try {
             await ConfigurationService.deleteSetting(key);
-            res.status(200).json({ message: \`Setting "\${key}" deleted successfully.\` });
+            res.status(200).json({ message: `Setting "${key}" deleted successfully.` });
         } catch (error) {
             res.status(500).json({ error: 'Failed to delete setting', details: error.message });
         }
@@ -402,8 +402,8 @@ app.post('/api/users', async (req, res) => {
   } catch (error) {
     console.error('Error adding user:', error);
     // Check if the error is a unique constraint violation
-    if (error.message.includes('Username')) {
-         res.status(409).json({ error: error.message });
+    if (error.message.includes('UNIQUE constraint failed: Users.username')) {
+        res.status(409).json({ error: 'Username already exists' });
     } else {
         res.status(500).json({ error: 'Failed to add user', details: error.message });
     }
@@ -411,16 +411,18 @@ app.post('/api/users', async (req, res) => {
 });
 
 // GET a user by ID
-// Note: Authentication/Authorization needed to ensure user can only get their own info or if admin
 app.get('/api/users/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid user ID' });
   }
+  // Note: In a real app, ensure only authorized users can view user details
   try {
     const user = await UserService.getUserById(id);
     if (user) {
-      res.json(user);
+      // For security, don't return the password hash
+      const { password_hash, ...userWithoutHash } = user;
+      res.json(userWithoutHash);
     } else {
       res.status(404).json({ error: 'User not found' });
     }
@@ -430,38 +432,14 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
-// PUT (Update) user preferences
-// Note: Authentication/Authorization needed to ensure user can only update their own preferences
-app.put('/api/users/:id/preferences', async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const { preferences } = req.body;
-
-  if (isNaN(id) || preferences === undefined) {
-     return res.status(400).json({ error: 'Missing required fields or invalid ID' });
-  }
-
-  try {
-    const changes = await UserService.updateUserPreferences(id, preferences);
-     if (changes > 0) {
-      // Return the updated user object (excluding password hash)
-      const updatedUser = await UserService.getUserById(id);
-      res.json({ message: 'User preferences updated successfully', user: updatedUser });
-    } else {
-      res.status(404).json({ error: 'User not found' });
-    }
-  } catch (error) {
-    console.error(`Error updating user preferences ${id}:`, error);
-    res.status(500).json({ error: 'Failed to update user preferences', details: error.message });
-  }
-});
-
 // DELETE a user by ID
-// Note: This route needs strong security/authentication/authorization in a real app
+// Note: This route needs strong security/authentication in a real app
 app.delete('/api/users/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid user ID' });
   }
+  // Note: In a real app, ensure only authorized users can delete users
   try {
     const changes = await UserService.deleteUser(id);
     if (changes > 0) {
@@ -476,38 +454,33 @@ app.delete('/api/users/:id', async (req, res) => {
 });
 
 
-// --- Dashboard API Routes ---
+    // --- Dashboard API Routes ---
 
 // POST a new dashboard for a user
-// Note: Authentication/Authorization needed to ensure dashboard is created for the authenticated user
+// Note: Authentication/Authorization needed for this route in a real app
 app.post('/api/users/:userId/dashboards', async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
   const { name } = req.body;
-
-  if (isNaN(userId) || !name) {
-    return res.status(400).json({ error: 'Missing required fields' });
+   if (isNaN(userId)) {
+    return res.status(400).json({ error: 'User ID and name are required' });
   }
-
-  // Note: In a real app, verify the authenticated user matches userId or is admin
-
+  // Note: In a real app, verify the user exists and the requesting user is authorized
   try {
     const newDashboardId = await DashboardService.addDashboard(userId, name);
-    const newDashboard = await DashboardService.getDashboardById(newDashboardId);
-    res.status(201).json({ message: 'Dashboard created successfully', dashboard: newDashboard });
+    res.status(201).json({ id: newDashboardId, message: 'Dashboard created successfully' });
   } catch (error) {
     console.error(`Error adding dashboard for user ${userId}:`, error);
     res.status(500).json({ error: 'Failed to add dashboard', details: error.message });
   }
 });
 
-// GET all dashboards for a specific user
-// Note: Authentication/Authorization needed to ensure user can only get their own dashboards
+// GET all dashboards for a user
 app.get('/api/users/:userId/dashboards', async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
    if (isNaN(userId)) {
     return res.status(400).json({ error: 'Invalid user ID' });
   }
-  // Note: In a real app, verify the authenticated user matches userId or is admin
+  // Note: In a real app, verify the requesting user is authorized to view these dashboards
   try {
     const dashboards = await DashboardService.getDashboardsByUserId(userId);
     res.json(dashboards);
@@ -518,13 +491,12 @@ app.get('/api/users/:userId/dashboards', async (req, res) => {
 });
 
 // GET a specific dashboard by ID
-// Note: Authentication/Authorization needed to ensure user has access to this dashboard
 app.get('/api/dashboards/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid dashboard ID' });
   }
-  // Note: In a real app, verify the user has access to this dashboard
+  // Note: In a real app, verify the requesting user is authorized to view this dashboard
   try {
     const dashboard = await DashboardService.getDashboardById(id);
     if (dashboard) {
@@ -538,41 +510,15 @@ app.get('/api/dashboards/:id', async (req, res) => {
   }
 });
 
-// PUT (Update) a dashboard's name
-// Note: Authentication/Authorization needed to ensure user has access to this dashboard
-app.put('/api/dashboards/:id', async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const { name } = req.body;
-
-  if (isNaN(id) || !name) {
-     return res.status(400).json({ error: 'Missing required fields or invalid ID' });
-  }
-
-  // Note: In a real app, verify the user has access to this dashboard
-
-  try {
-    const changes = await DashboardService.updateDashboard(id, name);
-     if (changes > 0) {
-      const updatedDashboard = await DashboardService.getDashboardById(id);
-      res.json({ message: 'Dashboard updated successfully', dashboard: updatedDashboard });
-    } else {
-      res.status(404).json({ error: 'Dashboard not found' });
-    }
-  } catch (error) {
-    console.error(`Error updating dashboard ${id}:`, error);
-    res.status(500).json({ error: 'Failed to update dashboard', details: error.message });
-  }
-});
-
 // DELETE a dashboard by ID
-// Note: Authentication/Authorization needed to ensure user has access to this dashboard
+// Note: Authentication/Authorization needed for this route in a real app
 // Note: Should also delete associated widget instances
 app.delete('/api/dashboards/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     return res.status(400).json({ error: 'Invalid dashboard ID' });
   }
-  // Note: In a real app, verify the user has access to this dashboard
+  // Note: In a real app, verify the requesting user is authorized to delete this dashboard
   try {
     const changes = await DashboardService.deleteDashboard(id);
     if (changes > 0) {
@@ -587,49 +533,25 @@ app.delete('/api/dashboards/:id', async (req, res) => {
 });
 
 
-// TODO: Add other backend API routes here (e.g., for widget data, etc.)
+    // --- Server Start ---
 
-    // --- Start Server ---
     app.listen(port, () => {
-      console.log(\`Mission Control Backend listening on port \${port}\`);
-      console.log(\`Database file: \${DB_PATH}\`);
-      // TODO: Remind user to run 'npm install' in backend directory and ensure DB_PATH is a persistent volume in Docker Compose.
+      console.log(`Mission Control Backend listening on port ${port}`);
     });
+
   })
   .catch((err) => {
-    console.error('Failed to initialize database, server not started.', err);
-    // Exit the process if database initialization fails
-    process.exit(1);
+    console.error('Failed to initialize database:', err);
+    process.exit(1); // Exit the process if database initialization fails
   });
 
-// Optional: Close the database connection when the process exits
+// Close the database connection when the application is shutting down
 process.on('SIGINT', () => {
-  if (db) {
-    db.close((err) => {
-      if (err) {
-        console.error('Error closing database:', err.message);
-      }
-      console.log('Database connection closed.');
-      process.exit(0);
-    });
-  } else {
+  db.close((err) => {
+    if (err) {
+      console.error('Error closing database:', err.message);
+    }
+    console.log('Database connection closed.');
     process.exit(0);
-  }
+  });
 });
-
-process.on('SIGTERM', () => {
-  if (db) {
-    db.close((err) => {
-      if (err) {
-        console.error('Error closing database:', err.message);
-      }
-      console.log('Database connection closed.');
-      process.exit(0);
-    });
-  } else {
-    process.exit(0);
-  }
-});
-
-// Export the database connection for services to use
-module.exports.db = db;
