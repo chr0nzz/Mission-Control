@@ -12,7 +12,7 @@ export default defineConfig({
     })],
   
 server: {
-    port: 54168,
+    port: 3000,
     host: '0.0.0.0',
     allowedHosts: true,
   },
@@ -21,7 +21,7 @@ server: {
       '@': path.resolve(__dirname, './src'),
     }
   },
-  css: {
+  /*css: {
     preprocessorOptions: {
       scss: {
         additionalData: `@import "vue3-grid-layout/dist/style.css";`
@@ -32,5 +32,5 @@ server: {
     rollupOptions: {
       external: ['vue-grid-layout/dist/vue-grid-layout.css'],
     }
-  }
+  }*/
 })
