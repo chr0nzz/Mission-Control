@@ -20,5 +20,10 @@ export default defineConfig({
         additionalData: `@import "vue3-grid-layout/dist/style.css";`
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      external: ['vue3-grid-layout/dist/style.css'],
+    }
   }
 })
