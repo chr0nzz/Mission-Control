@@ -2,7 +2,8 @@ import 'vue3-grid-layout/dist/vue-grid-layout.css';
 // src/frontend/src/main.js
 
 import { createApp, ref } from 'vue';
-import App from './App.vue';
+import App from './App.vue'
+import 'https://cdn.jsdelivr.net/npm/vue-grid-layout@2.4.0/public/app.min.css';
 // Optional: Import a router if you plan to have multiple views/pages
 // import router from './router';
 
