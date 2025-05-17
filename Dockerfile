@@ -36,7 +36,6 @@ WORKDIR /app
 # If backend has its own package.json at src/backend/package.json, adjust paths.
 COPY package.json ./
 RUN npm install
-COPY package-lock.json ./
 # If using yarn:
 # COPY yarn.lock ./
 
@@ -50,7 +49,7 @@ RUN npm install
 # Copy the entire src directory (backend and frontend for context, though frontend is already built)
 # Alternatively, just copy src/backend if backend is self-contained for its build.
 COPY src ./src
-COPY src/frontend/tailwind.config.js ./tailwind.config.js # If Tailwind is processed by backend or part of a shared build
+COPY src/frontend/tailwind.config.js ./ # If Tailwind is processed by backend or part of a shared build
 
 # If your backend is TypeScript, add a build step here:
 # RUN npm run build:backend # Or your specific backend build script

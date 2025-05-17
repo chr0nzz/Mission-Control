@@ -3,7 +3,7 @@ mission-control/
 ├── Dockerfile                       # Dockerfile for building the application image
 ├── .dockerignore                    # Specifies intentionally untracked files that Docker should ignore
 ├── package.json                     # Project dependencies and scripts (assuming Node.js backend/frontend)
-├── tailwind.config.js               # Configuration file for Tailwind CSS
+├── src/frontend/tailwind.config.js  # Configuration file for Tailwind CSS
 ├── README.md                        # Top-level project README (overview, link to docs/, etc.)
 ├── example-config/                  # Directory containing example YAML configuration files
 │   ├── settings.example.yml         # Example general application settings
