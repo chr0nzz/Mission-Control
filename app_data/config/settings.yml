@@ -1,0 +1,16 @@
+# settings.yml
+
+# Application settings
+app:
+  name: Mission Control
+  port: 3000
+
+# Database settings
+database:
+  type: sqlite
+  file: /app/data/mission_control.db
+
+# MQTT settings
+mqtt:
+  enabled: false
+  broker_url: mqtt://localhost:1883
