@@ -62,6 +62,7 @@ WORKDIR /app
 # Set Node environment to production
 ENV NODE_ENV=production
 
+COPY --from=backend-builder /app/package-lock.json ./
 # Create a non-root user and group
 # Using 'node' user which is conventional in node base images, but often has UID 1000.
 # If your base image doesn't have 'node' user, you'd use:
