@@ -3,15 +3,13 @@ import vue from '@vitejs/plugin-vue'
 import path from 'node:path'
 
 export default defineConfig({
-  css: {
-    preprocessorOptions: {
-      scss: {
-        additionalData: `@import "vue3-grid-layout/dist/vue-grid-layout.css";`
-      }
+  plugins: [vue()],
+  build: {
+    rollupOptions: {
+      external: ['vue3-grid-layout/dist/vue-grid-layout.css']
     }
   },
-  plugins: [vue()],
-  server: {
+server: {
     port: 54168,
     host: '0.0.0.0',
     allowedHosts: true,
