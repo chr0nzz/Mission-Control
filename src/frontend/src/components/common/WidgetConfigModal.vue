@@ -59,7 +59,7 @@
             <textarea v-else-if="field.type === 'textarea' || field.type === 'object_string'"
                       :id="`widget-option-${field.name}`"
                       v-model="formData[field.name]"
-                      :placeholder="field.placeholder || (field.type === 'object_string' ? 'Enter valid JSON or parsable object string, e.g., {\'key\':\\'value\\'}' : '')"
+                      :placeholder="field.placeholder || (field.type === 'object_string' ? 'Enter valid JSON or parsable object string, e.g., {\'key\':\'value\'}' : '')"
                       :required="field.required"
                       rows="3"
                       class="mt-1 w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-xs"></textarea>
