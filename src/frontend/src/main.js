@@ -1,4 +1,4 @@
-import 'vue3-grid-layout/dist/vue-grid-layout.css';
+
 // src/frontend/src/main.js
 
 import { createApp, ref } from 'vue';
@@ -12,7 +12,7 @@ import 'vue-grid-layout/dist/vue-grid-layout.css';
 
 // Import global styles or Tailwind entry point if not handled by index.html or a build process
 // import './assets/styles/main.css'; // Example: if you have a main.css importing Tailwind
-import 'vue3-grid-layout/dist/style.css';
+
 
 // Create the Vue application instance
 const app = createApp(App);
