@@ -101,7 +101,6 @@
 
 <script setup>
 import { ref, onMounted, computed, inject, watch } from 'vue';
-// import { GridLayout, GridItem } from 'vue3-grid-layout'; 
 
 import WidgetWrapper from '../components/widgets/WidgetWrapper.vue';
 import WidgetConfigModal from '../components/common/WidgetConfigModal.vue';
@@ -541,7 +540,6 @@ const handleWidgetPropertyUpdateFromGridItem = ({ widgetId, propertyName, newVal
 </script>
 
 <style>
-@import 'vue3-grid-layout/dist/style.css';
 
 .vue-grid-layout { transition: background-color 0.3s ease; }
 .vue-grid-item { transition: all 0.2s ease; overflow: hidden; }
