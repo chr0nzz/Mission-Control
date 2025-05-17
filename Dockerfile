@@ -1,68 +1,61 @@
 # Dockerfile for Mission Control (Node.js/Express Backend + Vue.js/React Frontend)
 
-# --- Stage 1: Frontend Dependencies & Source ---
-FROM node:lts-alpine AS frontend-deps
+# --- Stage 1: Build Frontend Assets ---
+FROM node:lts-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
-# Copy only package.json first to leverage Docker cache for dependencies
+# Copy frontend package.json and package-lock.json (or yarn.lock)
 COPY src/frontend/package.json ./
 
-# Optionally copy package-lock.json if it exists in the build context.
-# If not found, npm install will generate one in the container.
-# The `|| true` ensures the build doesn't fail if package-lock.json is missing from the host.
-COPY src/frontend/package-lock.json* ./package-lock.json 2>/dev/null || true
-
-# Install all frontend dependencies.
-# If package-lock.json was copied and is valid, it will be used.
-# Otherwise, one will be generated based on package.json.
-RUN npm install --prefer-offline --no-audit --progress=false && npm cache clean --force
 # If using yarn:
-# RUN yarn install --frozen-lockfile --network-concurrency 1
+# COPY src/frontend/yarn.lock ./
+
+# Install frontend dependencies
+RUN npm install
+# If using yarn:
+# RUN yarn install --frozen-lockfile
 
 # Copy the rest of the frontend source code
 COPY src/frontend/ ./
 
-# --- Stage 2: Build Frontend Assets ---
-# This stage inherits everything from frontend-deps (including node_modules)
-FROM frontend-deps AS frontend-builder
-
 # Build frontend static assets
-# Ensure your src/frontend/package.json has a "build" script.
+# Replace 'npm run build' with your actual frontend build command (e.g., vue-cli-service build, react-scripts build)
 RUN npm run build
 # This should create a 'dist' or 'build' folder in /app/frontend/ (e.g., /app/frontend/dist)
 
 
-# --- Stage 3: Backend Dependencies & Source ---
-FROM node:lts-alpine AS backend-deps
+# --- Stage 2: Build Backend ---
+FROM node:lts-alpine AS backend-builder
 
 WORKDIR /app
 
-# Copy only package.json first
+# Copy backend package.json and package-lock.json (or yarn.lock)
+# Assuming backend and frontend have separate package.json or a root one.
+# For this example, assuming backend dependencies are managed by a root package.json
+# If backend has its own package.json at src/backend/package.json, adjust paths.
 COPY package.json ./
-# Optionally copy package-lock.json if it exists.
-COPY package-lock.json* ./package-lock.json 2>/dev/null || true
-
-# Install ALL backend dependencies (including devDependencies if needed for any build steps later).
-# This will generate/update package-lock.json inside this stage.
-# This lock file will be copied to the production stage.
-RUN npm install --prefer-offline --no-audit --progress=false && npm cache clean --force
+COPY package-lock.json ./
 # If using yarn:
-# RUN yarn install --frozen-lockfile --network-concurrency 1
+# COPY yarn.lock ./
 
-# Copy backend application code AFTER installing dependencies,
-# unless backend has a build step that needs the source first.
-# For a simple JS backend, this order is fine.
-COPY src/backend ./src/backend
-# If your backend is TypeScript, you would typically add a build step here
-# or in a subsequent stage using this backend-deps stage as its base.
-# Example:
-# FROM backend-deps AS backend-builder
-# COPY src/backend ./src/backend # Copy source again if needed for build
-# RUN npm run build:backend
+# Install ALL dependencies (including devDependencies if backend needs them for build, e.g., TypeScript)
+# If backend is TypeScript, you'd transpile here.
+# For a pure JavaScript backend, you might only need production dependencies later.
+# For now, let's assume we install all for simplicity, then prune for production stage.
+RUN npm install
+# If using yarn:
+# RUN yarn install --frozen-lockfile
 
+# Copy the entire src directory (backend and frontend for context, though frontend is already built)
+# Alternatively, just copy src/backend if backend is self-contained for its build.
+COPY src ./src
+COPY tailwind.config.js ./tailwind.config.js # If Tailwind is processed by backend or part of a shared build
 
-# --- Stage 4: Production Image ---
+# If your backend is TypeScript, add a build step here:
+# RUN npm run build:backend # Or your specific backend build script
+
+# --- Stage 3: Production Image ---
 FROM node:lts-alpine AS production
 
 WORKDIR /app
@@ -70,38 +63,55 @@ WORKDIR /app
 # Set Node environment to production
 ENV NODE_ENV=production
 
-# Use the non-root 'node' user provided by the base image
-USER node
+# Create a non-root user and group
+# Using 'node' user which is conventional in node base images, but often has UID 1000.
+# If your base image doesn't have 'node' user, you'd use:
+# RUN addgroup -S appgroup && adduser -S -G appgroup appuser
+# USER appuser
+# For node:lts-alpine, 'node' user exists. We'll use it.
+# Ensure /app directory is owned by the node user for writing logs or temp files if needed.
+# The 'node' user in official images usually has UID 1000.
+# RUN chown -R node:node /app # Usually not needed if WORKDIR is /app and USER is node
 
-# Copy package.json AND the package-lock.json that was definitely present/generated
-# in the backend-deps stage. This ensures `npm ci` uses a consistent lock file.
-COPY --chown=node:node --from=backend-deps /app/package.json ./
-COPY --chown=node:node --from=backend-deps /app/package-lock.json ./
-
-# Install ONLY production backend dependencies using `npm ci` for speed and reliability.
-# `npm ci` strictly requires a package-lock.json or npm-shrinkwrap.json.
-RUN npm ci --omit=dev --prefer-offline --no-audit --progress=false && npm cache clean --force
+# Copy necessary files from backend-builder stage
+COPY --from=backend-builder /app/package.json ./
+COPY --from=backend-builder /app/package-lock.json ./
 # If using yarn:
-# RUN yarn install --production --frozen-lockfile --network-concurrency 1
+# COPY --from=backend-builder /app/yarn.lock ./
 
-# Copy backend application code from the build context (source).
-# If you had a separate backend-builder stage (e.g., for TypeScript that compiled to a 'dist_backend' folder),
-# you would copy that compiled output from the backend-builder stage instead of source.
-# For our current JavaScript backend, copying src/backend is fine.
-COPY --chown=node:node src/backend ./src/backend
+# Install ONLY production backend dependencies
+RUN npm ci --omit=dev
+# If using yarn:
+# RUN yarn install --production --frozen-lockfile
+
+# Copy backend application code from backend-builder stage
+# This includes the compiled backend code if it was a TypeScript project
+COPY --from=backend-builder /app/src/backend ./src/backend
+# If you have other top-level files needed by backend (e.g. main config loader), copy them too.
+# COPY --from=backend-builder /app/some_other_file.js ./
 
 # Copy built frontend assets from frontend-builder stage to the 'public' directory
-COPY --chown=node:node --from=frontend-builder /app/frontend/dist ./public
-# Adjust '/app/frontend/dist' if your frontend build output directory is different (e.g., 'build').
+# This 'public' directory will be served by Express static middleware.
+COPY --from=frontend-builder /app/frontend/dist ./public
+# Adjust '/app/frontend/dist' if your frontend build output directory is different.
 
-# Expose the port the application will run on
+# Expose the port the application will run on (defined in settings.yml or ENV)
+# This is for documentation; actual port mapping is done in docker-compose.yml
+# The default port is 3000, but it can be changed via settings.yml
 EXPOSE 3000
 
 # Define the healthcheck
+# This is a basic healthcheck; adjust the path and conditions as needed.
+# It assumes your app has a simple health endpoint or that serving the main page indicates health.
+# For a real app, you might want a dedicated /api/health endpoint in your backend.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget -q -O - http://localhost:3000 || exit 1
-  # Alternative for Node.js if wget is not available in the base alpine image without adding it:
-  # CMD node -e "require('http').get('http://localhost:3000', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+  # Or use: CMD ["node", "-e", "require('http').get('http://localhost:3000', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+
+
+# Switch to the non-root user before running the application
+USER node
 
 # Command to run the application
+# This should start your backend server (e.g., src/backend/server.js)
 CMD ["node", "src/backend/server.js"]
