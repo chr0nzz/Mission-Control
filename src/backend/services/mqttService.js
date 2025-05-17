@@ -308,7 +308,12 @@ function connectNew(brokerUrl, options, resolve, reject) {
     });
 
     client.on('reconnect', () => {
-        console.log(`[MQTTService] 🔄 Reconnecting to MQTT broker: ${brokerUrl}`);
+        if (currentMqttSettings && currentMqttSettings.enable !== false) {
+            console.log(`[MQTTService] 🔄 Reconnecting to MQTT broker: ${brokerUrl}`);
+        } else {
+            console.log('[MQTTService] MQTT is disabled. Skipping reconnection.');
+            client.end(true);
+        }
     });
 
     client.on('error', (error) => {
