@@ -51,24 +51,24 @@ services:
   # --- Optional: MQTT Broker (e.g., Mosquitto) ---
   # Uncomment this section if you want to run a local MQTT broker
   # and don't have one already.
-  # mosquitto:
-  #   image: eclipse-mosquitto:2.0 # Use a specific, stable version
-  #   container_name: mqtt_broker
-  #   ports:
-  #     - "1883:1883" # Standard MQTT port
-  #     - "9001:9001" # MQTT over WebSockets port (if frontend client uses it and Mosquitto is configured for it)
-  #   volumes:
-  #     # Create these directories on your host: ./mosquitto_data/config, ./mosquitto_data/data, ./mosquitto_data/log
-  #     # You'll need to provide a mosquitto.conf file in ./mosquitto_data/config
-  #     # Example mosquitto.conf for WebSocket support:
-  #     # listener 1883
-  #     # listener 9001
-  #     # protocol websockets
-  #     # allow_anonymous true (or configure authentication)
-  #     - ./mosquitto_data/config:/mosquitto/config
-  #     - ./mosquitto_data/data:/mosquitto/data
-  #     - ./mosquitto_data/log:/mosquitto/log
-  #   restart: unless-stopped
+  mosquitto:
+    image: eclipse-mosquitto:2.0 # Use a specific, stable version
+    container_name: mqtt_broker
+    ports:
+      - "1883:1883" # Standard MQTT port
+      - "9001:9001" # MQTT over WebSockets port (if frontend client uses it and Mosquitto is configured for it)
+    volumes:
+      # Create these directories on your host: ./mosquitto_data/config, ./mosquitto_data/data, ./mosquitto_data/log
+      # You'll need to provide a mosquitto.conf file in ./mosquitto_data/config
+      # Example mosquitto.conf for WebSocket support:
+      # listener 1883
+      # listener 9001
+      # protocol websockets
+      # allow_anonymous true (or configure authentication)
+      - ./mosquitto_data/config:/mosquitto/config
+      - ./mosquitto_data/data:/mosquitto/data
+      - ./mosquitto_data/log:/mosquitto/log
+    restart: unless-stopped
 
   # --- Optional: Secure Docker Socket Proxy (if Docker widget is implemented) ---
   # Uncomment and configure if a Docker widget is part of the application.
