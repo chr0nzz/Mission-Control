@@ -1,0 +1,277 @@
+# example-config/dashboard.example.yml
+#
+# Example dashboard configuration using the responsive grid layout.
+# Copy this file to /app_data/config/dashboard.yml and customize it.
+
+pageInfo:
+  title: "🚀 Mission Control Demo"
+
+# Breakpoints should match those defined in DashboardView.vue (e.g., lg, md, sm, xs, xxs)
+# Default columns for these breakpoints are typically: lg: 12, md: 10, sm: 6, xs: 4, xxs: 2
+layouts:
+  lg: # Layout for large screens (e.g., >=1200px)
+    - i: "header_welcome" # Unique ID for this widget instance
+      x: 0 # Grid column position (0-indexed)
+      y: 0 # Grid row position (0-indexed)
+      w: 12 # Width in grid units (out of 12 for lg)
+      h: 1  # Height in grid units (rowHeight is e.g., 30px or 50px)
+      minW: 6 # Minimum width
+      minH: 1 # Minimum height
+      maxH: 2 # Maximum height
+      widgetType: "SectionHeaderWidget"
+      widgetOptions:
+        customLabel: "👋 Welcome to Your Mission Control!"
+        textAlign: "center"
+        textSize: "2xl"
+        showDivider: false
+        marginTop: 10
+        marginBottom: 10
+
+    - i: "datetime_main"
+      x: 0
+      y: 1 # Below welcome header
+      w: 3
+      h: 2
+      minW: 2; minH: 2
+      widgetType: "DateTimeWidget"
+      widgetOptions:
+        customLabel: "Local Time"
+        showDate: true
+        showTime: true
+        # Example of object_string for dateFormat/timeFormat if you were using it:
+        # dateFormat: '{"weekday":"long", "year":"numeric", "month":"long", "day":"numeric"}'
+        # timeFormat: '{"hour":"2-digit", "minute":"2-digit", "second":"2-digit"}'
+
+    - i: "weather_local"
+      x: 3
+      y: 1
+      w: 3
+      h: 4 # Taller for forecast
+      minW: 2; minH: 3
+      widgetType: "WeatherWidget"
+      widgetOptions:
+        customLabel: "Local Weather"
+        latitude: 40.7128 # New York Example - REPLACE WITH YOURS
+        longitude: -74.0060 # New York Example - REPLACE WITH YOURS
+        units: "metric"
+        show_forecast_days: 2
+        refresh_interval: 900 # 15 minutes
+
+    - i: "glances_main_server"
+      x: 6
+      y: 1
+      w: 6 # Wider for more stats
+      h: 6
+      minW: 4; minH: 4
+      widgetType: "GlancesWidget"
+      widgetOptions:
+        customLabel: "Server Alpha Monitor"
+        url: "http://YOUR_GLANCES_HOST_OR_IP:61208" # ### REPLACE THIS ###
+        metrics_to_display: "cpu,mem,load,fs,network,uptime" # Comma-separated string
+        refresh_interval: 5
+
+    - i: "header_media"
+      x: 0
+      y: 3 # Below datetime and part of weather
+      w: 6 # Spans left half
+      h: 1
+      minH: 1; maxH: 1
+      widgetType: "SectionHeaderWidget"
+      widgetOptions:
+        customLabel: "🎬 Media Center"
+        textSize: "xl"
+        showDivider: true
+        
+    - i: "sonarr_tv"
+      x: 0
+      y: 4 # Below media header
+      w: 6
+      h: 7
+      minW: 3; minH: 4
+      widgetType: "SonarrWidget"
+      widgetOptions:
+        customLabel: "Sonarr - Upcoming TV"
+        url: "http://YOUR_SONARR_HOST_OR_IP:8989" # ### REPLACE THIS ###
+        apiKey: "YOUR_SONARR_API_KEY" # ### REPLACE THIS ###
+        days_ahead: 7
+        max_items: 8
+        show_series_poster: true
+        refresh_interval: 3600 # 1 hour
+
+    - i: "radarr_movies"
+      x: 0
+      y: 11 # Below Sonarr
+      w: 6
+      h: 6
+      minW: 3; minH: 3
+      widgetType: "RadarrWidget"
+      widgetOptions:
+        customLabel: "Radarr - Downloads"
+        url: "http://YOUR_RADARR_HOST_OR_IP:7878" # ### REPLACE THIS ###
+        apiKey: "YOUR_RADARR_API_KEY" # ### REPLACE THIS ###
+        max_items: 5
+        refresh_interval: 60 # 1 minute
+
+    - i: "mqtt_temp_sensor"
+      x: 6
+      y: 7 # Below Glances
+      w: 3
+      h: 2
+      minW: 2; minH: 2
+      widgetType: "MqttSubscriberWidget"
+      widgetOptions:
+        customLabel: "Living Room Temp"
+        topic: "home/livingroom/temperature" # Replace with your MQTT topic
+        suffix: " °C"
+        json_path: "value" # If payload is e.g. {"value": 22.5}
+
+    - i: "pihole_stats_main"
+      x: 9
+      y: 7 # Next to MQTT sensor
+      w: 3
+      h: 5
+      minW: 2; minH: 4
+      widgetType: "PiholeWidget"
+      widgetOptions:
+        customLabel: "Pi-hole Network Adblock"
+        url: "http://YOUR_PIHOLE_HOST_OR_IP/admin" # ### REPLACE THIS ###
+        apiKey: "YOUR_PIHOLE_API_KEY" # ### REPLACE THIS ###
+        show_top_domain: true
+        show_gravity_status: true
+        refresh_interval: 300 # 5 minutes
+
+  md: # Layout for medium screens (e.g., >=996px) - 10 columns by default
+    - i: "header_welcome"
+      x: 0; y: 0; w: 10; h: 1; minW: 5; minH: 1; maxH: 2
+      widgetType: "SectionHeaderWidget"
+      widgetOptions: { customLabel: "👋 Welcome!", textSize: "xl", textAlign: "center", showDivider: false, marginTop: 5, marginBottom: 5 }
+
+    - i: "datetime_main"
+      x: 0; y: 1; w: 3; h: 2; minW: 2; minH: 2
+      widgetType: "DateTimeWidget"
+      widgetOptions: { customLabel: "Local Time" }
+
+    - i: "weather_local"
+      x: 3; y: 1; w: 3; h: 4; minW: 2; minH: 3
+      widgetType: "WeatherWidget"
+      widgetOptions: { latitude: 40.7128, longitude: -74.0060, units: "metric", show_forecast_days: 1 }
+
+    - i: "glances_main_server"
+      x: 0; y: 5; w: 10; h: 5; minW: 4; minH: 3 # Full width on MD for Glances
+      widgetType: "GlancesWidget"
+      widgetOptions: { url: "http://YOUR_GLANCES_HOST_OR_IP:61208", metrics_to_display: "cpu,mem,load,fs" }
+
+    - i: "header_media"
+      x: 0; y: 10; w: 10; h: 1; minH: 1; maxH: 1
+      widgetType: "SectionHeaderWidget"
+      widgetOptions: { customLabel: "🎬 Media", textSize: "lg", showDivider: true }
+      
+    - i: "sonarr_tv"
+      x: 0; y: 11; w: 5; h: 6; minW: 3; minH: 4
+      widgetType: "SonarrWidget"
+      widgetOptions: { url: "http://YOUR_SONARR_HOST_OR_IP:8989", apiKey: "YOUR_SONARR_API_KEY", max_items: 6 }
+
+    - i: "radarr_movies"
+      x: 5; y: 11; w: 5; h: 6; minW: 3; minH: 3
+      widgetType: "RadarrWidget"
+      widgetOptions: { url: "http://YOUR_RADARR_HOST_OR_IP:7878", apiKey: "YOUR_RADARR_API_KEY", max_items: 4 }
+      
+    - i: "mqtt_temp_sensor"
+      x: 6; y: 1; w: 4; h: 2; minW: 2; minH: 2 # Next to weather
+      widgetType: "MqttSubscriberWidget"
+      widgetOptions: { customLabel: "Living Room Temp", topic: "home/livingroom/temperature", suffix: " °C", json_path: "value" }
+      
+    - i: "pihole_stats_main"
+      x: 0; y: 17; w: 5; h: 5; minW: 2; minH: 4 # Below media
+      widgetType: "PiholeWidget"
+      widgetOptions: { url: "http://YOUR_PIHOLE_HOST_OR_IP/admin", apiKey: "YOUR_PIHOLE_API_KEY" }
+
+
+  sm: # Layout for small screens (e.g., >=768px) - 6 columns by default
+    - i: "header_welcome"
+      x: 0; y: 0; w: 6; h: 1; minW: 4; minH: 1; maxH: 2
+      widgetType: "SectionHeaderWidget"
+      widgetOptions: { customLabel: "Welcome!", textSize: "lg", textAlign: "center", showDivider: false }
+
+    - i: "datetime_main"
+      x: 0; y: 1; w: 6; h: 2; minW: 3; minH: 2
+      widgetType: "DateTimeWidget"
+      widgetOptions: {} # Use defaults
+
+    - i: "weather_local"
+      x: 0; y: 3; w: 6; h: 3; minW: 3; minH: 3
+      widgetType: "WeatherWidget"
+      widgetOptions: { latitude: 40.7128, longitude: -74.0060, units: "metric", show_forecast_days: 1 }
+      
+    - i: "glances_main_server"
+      x: 0; y: 6; w: 6; h: 4; minW: 3; minH: 3
+      widgetType: "GlancesWidget"
+      widgetOptions: { url: "http://YOUR_GLANCES_HOST_OR_IP:61208", metrics_to_display: "cpu,mem" }
+
+    - i: "header_media"
+      x: 0; y: 10; w: 6; h: 1; minH: 1; maxH: 1
+      widgetType: "SectionHeaderWidget"
+      widgetOptions: { customLabel: "Media" }
+
+    - i: "sonarr_tv"
+      x: 0; y: 11; w: 6; h: 5; minW: 3; minH: 3
+      widgetType: "SonarrWidget"
+      widgetOptions: { url: "http://YOUR_SONARR_HOST_OR_IP:8989", apiKey: "YOUR_SONARR_API_KEY", max_items: 4, show_series_poster: false }
+
+    - i: "radarr_movies"
+      x: 0; y: 16; w: 6; h: 4; minW: 3; minH: 3
+      widgetType: "RadarrWidget"
+      widgetOptions: { url: "http://YOUR_RADARR_HOST_OR_IP:7878", apiKey: "YOUR_RADARR_API_KEY", max_items: 3 }
+
+    - i: "mqtt_temp_sensor"
+      x: 0; y: 20; w: 6; h: 2; minW: 3; minH: 2
+      widgetType: "MqttSubscriberWidget"
+      widgetOptions: { customLabel: "Living Room Temp", topic: "home/livingroom/temperature", suffix: " °C", json_path: "value" }
+
+    - i: "pihole_stats_main"
+      x: 0; y: 22; w: 6; h: 5; minW: 3; minH: 4
+      widgetType: "PiholeWidget"
+      widgetOptions: { url: "http://YOUR_PIHOLE_HOST_OR_IP/admin", apiKey: "YOUR_PIHOLE_API_KEY" }
+
+
+  xs: # Layout for extra-small screens (e.g., >=480px) - 4 columns
+    - i: "header_welcome"
+      x: 0; y: 0; w: 4; h: 1
+      widgetType: "SectionHeaderWidget"
+      widgetOptions: { customLabel: "Welcome!", textSize: "md", textAlign: "center" }
+    - i: "datetime_main"
+      x: 0; y: 1; w: 4; h: 2
+      widgetType: "DateTimeWidget"
+      widgetOptions: {}
+    # ... Stack all other widgets full width (w: 4) one below the other for xs
+    - i: "weather_local"
+      x: 0; y: 3; w: 4; h: 3
+      widgetType: "WeatherWidget"
+      widgetOptions: { latitude: 40.7128, longitude: -74.0060, units: "metric", show_forecast_days: 0 } # No forecast on xs
+    - i: "glances_main_server"
+      x: 0; y: 6; w: 4; h: 3
+      widgetType: "GlancesWidget"
+      widgetOptions: { url: "http://YOUR_GLANCES_HOST_OR_IP:61208", metrics_to_display: "cpu,mem" }
+
+
+  xxs: # Layout for very-extra-small screens (e.g., <480px) - 2 columns
+    - i: "header_welcome"
+      x: 0; y: 0; w: 2; h: 1
+      widgetType: "SectionHeaderWidget"
+      widgetOptions: { customLabel: "Welcome!", textSize: "sm", textAlign: "center" }
+    - i: "datetime_main"
+      x: 0; y: 1; w: 2; h: 2
+      widgetType: "DateTimeWidget"
+      widgetOptions: {}
+    # ... Stack all other widgets full width (w: 2) one below the other for xxs
+    - i: "weather_local"
+      x: 0; y: 3; w: 2; h: 3
+      widgetType: "WeatherWidget"
+      widgetOptions: { latitude: 40.7128, longitude: -74.0060, units: "metric", show_forecast_days: 0 }
+    - i: "glances_main_server"
+      x: 0; y: 6; w: 2; h: 3
+      widgetType: "GlancesWidget"
+      widgetOptions: { url: "http://YOUR_GLANCES_HOST_OR_IP:61208", metrics_to_display: "cpu" } # Only CPU on xxs
+
+# You can add more widgets to each breakpoint layout as needed.
+# Remember to replace placeholder URLs and API keys with your actual values.

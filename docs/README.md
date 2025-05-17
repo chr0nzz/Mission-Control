@@ -27,6 +27,22 @@ In the world of self-hosting and homelabbing, managing multiple services can bec
 
 *(Imagine a beautiful screenshot of a well-configured Mission Control dashboard here, showcasing various widgets like Glances, Sonarr, weather, etc.)*
 
++---------------------------------------------------------------------------------+
+| 🚀 Mission Control                                                              |
++---------------------------------------------------------------------------------+
+| System Monitoring 💻                      | Media Hub 🎬                       |
+| +---------------------------------------+ | +----------------------------------+ |
+| | Glances CPU: 25%  RAM: 4GB/16GB     | | | Sonarr: Upcoming Shows           | |
+| | Load: 0.5, 0.8, 1.2                 | | | - Show A S01E05 (Tonight)        | |
+| | Network: eth0 Up:10Mbps Down:50Mbps | | | - Show B S02E01 (Tomorrow)       | |
+| +---------------------------------------+ | +----------------------------------+ |
+| | Docker Containers: 5 Running        | | | Radarr: Downloading              | |
+| | - container_a (Up)                  | | | - Movie X (75%, 2MB/s)           | |
+| | - container_b (Up)                  | | +----------------------------------+ |
+| +---------------------------------------+ | Weather: ☀️ 22°C (Feels 24°C)    |
+|                                         |   Humidity: 60% Wind: 5km/h      |
++---------------------------------------------------------------------------------+
+
 +---------------------------------------------------------------------------------+| 🚀 Mission Control                                                              |+---------------------------------------------------------------------------------+| System Monitoring 💻                      | Media Hub 🎬                       || +---------------------------------------+ | +----------------------------------+ || | Glances CPU: 25%  RAM: 4GB/16GB     | | | Sonarr: Upcoming Shows           | || | Load: 0.5, 0.8, 1.2                 | | | - Show A S01E05 (Tonight)        | || | Network: eth0 Up:10Mbps Down:50Mbps | | | - Show B S02E01 (Tomorrow)       | || +---------------------------------------+ | +----------------------------------+ || | Docker Containers: 5 Running        | | | Radarr: Downloading              | || | - container_a (Up)                  | | | - Movie X (75%, 2MB/s)           | || | - container_b (Up)                  | | +----------------------------------+ || +---------------------------------------+ | Weather: ☀️ 22°C (Feels 24°C)    ||                                         |   Humidity: 60% Wind: 5km/h      |+---------------------------------------------------------------------------------+
 ## 📚 Documentation Table of Contents
 

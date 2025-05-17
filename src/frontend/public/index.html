@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.ico"> <title>Mission Control</title> <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class', // or 'media' if you prefer OS-level control without a toggle
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'], // Using Inter as a nice default
+          },
+          colors: {
+            // Define custom colors if needed, or extend existing ones
+            // Example:
+            // 'mission-blue': '#3490dc',
+          }
+        }
+      },
+      plugins: [],
+    }
+  </script>
+
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Basic body styling */
+    body {
+      font-family: 'Inter', sans-serif;
+      @apply bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300;
+    }
+    /* Ensure full height for the app */
+    html, body, #app {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    /* Custom scrollbar styling (optional, for a more modern look) */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        @apply bg-gray-200 dark:bg-gray-700 rounded-full;
+    }
+    ::-webkit-scrollbar-thumb {
+        @apply bg-gray-400 dark:bg-gray-500 rounded-full;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-gray-500 dark:bg-gray-400;
+    }
+  </style>
+
+</head>
+<body>
+  <noscript>
+    <strong>We're sorry but Mission Control doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+  </noscript>
+  <div id="app"></div>
+  </body>
+</html>

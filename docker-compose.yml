@@ -1,91 +1,124 @@
-
+# docker-compose.yml for Mission Control
 
 services:
-  backend:
+  # --- Main Mission Control Application Service ---
+  mission-control:
     build:
-      context: ./backend
-      dockerfile: ../docker/Dockerfile.backend
+      context: . # Build the image from the Dockerfile in the current directory
+      dockerfile: Dockerfile # Explicitly specify the Dockerfile name
+    container_name: mission_control
     ports:
-      - "8888:55726" # Map host port 8888 to container port 55726
+      # Map host port to container port.
+      # The container port (second number) should match what the app listens on (default 3000, from settings.yml or Dockerfile EXPOSE).
+      # The host port (first number) is how you access it from your browser.
+      - "3000:3000"
     volumes:
-      - backend_config:/app/config # Volume for backend configuration (e.g., YAML)
-      - sqlite_data:/app/data # Volume for SQLite database
-      - custom_widgets:/app/custom_widgets # Volume for custom widget files
+      # Mount host directories into the container for persistent data and configuration.
+      # This is CRUCIAL for users to keep their settings and data.
+      # Make sure these local directories (e.g., ./app_data) exist on your host or Docker will create them as root-owned.
+      - ./app_data/config:/app/config  # For settings.yml, dashboard.yml, custom.css
+                                       # Corresponds to CONFIG_DIR in yamlService.js
+      - ./app_data/data:/app/data      # For SQLite database (mission_control.db), etc.
+                                       # Corresponds to DATA_DIR in dbService.js
+      # Optional: Mount for custom widgets if dynamic loading from a host volume is implemented
+      # - ./app_data/custom_widgets:/app/custom_widgets
+    restart: unless-stopped # Restart policy for the container
     environment:
-      # Example environment variables - replace with actual secrets management later
-      - NODE_ENV=development
-      - BACKEND_PORT=55726
-      - SQLITE_DB_PATH=/app/data/missioncontrol.db
-      - MQTT_BROKER_URL=mqtt://mqtt:1883
-      - DOCKER_SOCKET_PROXY_URL=tcp://socket-proxy:2375
-      # Add environment variables for API keys and secrets here, managed securely
-    networks:
-      - mission-control-net
-    depends_on:
-      - mqtt
-      - socket-proxy # Backend needs the socket proxy to be available
+      # Timezone: Users should change this to their local timezone.
+      # See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+      - TZ=America/New_York
+      # Node environment (already set in Dockerfile, but can be reinforced here)
+      - NODE_ENV=production
+      # Optional: Define application port via environment variable if your app supports it
+      # This would override the port in settings.yml if server.js is written to prioritize ENV VAR.
+      # - APP_PORT=3000
+      # Optional: User and Group IDs for file permissions on mounted volumes.
+      # If you experience permission issues with files created by the container in ./app_data,
+      # you can try setting these to match your host user's UID and GID.
+      # The 'node' user in the container (from Dockerfile) typically has UID 1000, GID 1000.
+      # - PUID=1000
+      # - PGID=1000
+    # depends_on: # If you have services that mission-control needs to be running first
+      # - mqtt_broker # Example if using the Mosquitto service below
+      # - socket_proxy # Example if using the Docker socket proxy service below
+    healthcheck: # Replicate healthcheck from Dockerfile for Compose to monitor
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3000"] # Or your specific health check
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ../docker/Dockerfile.frontend
-    ports:
-      - "8080:80" # Map host port 8080 to container port 80 (Nginx default)
-    environment:
-      # Frontend environment variables (e.g., backend API URL)
-      - VITE_BACKEND_API_URL=http://localhost:55726 # Use localhost for host access, or backend service name if accessing from another container on the same network
-    networks:
-      - mission-control-net
-    depends_on:
-      - backend # Frontend needs the backend to be available
+  # --- Optional: MQTT Broker (e.g., Mosquitto) ---
+  # Uncomment this section if you want to run a local MQTT broker
+  # and don't have one already.
+  # mosquitto:
+  #   image: eclipse-mosquitto:2.0 # Use a specific, stable version
+  #   container_name: mqtt_broker
+  #   ports:
+  #     - "1883:1883" # Standard MQTT port
+  #     - "9001:9001" # MQTT over WebSockets port (if frontend client uses it and Mosquitto is configured for it)
+  #   volumes:
+  #     # Create these directories on your host: ./mosquitto_data/config, ./mosquitto_data/data, ./mosquitto_data/log
+  #     # You'll need to provide a mosquitto.conf file in ./mosquitto_data/config
+  #     # Example mosquitto.conf for WebSocket support:
+  #     # listener 1883
+  #     # listener 9001
+  #     # protocol websockets
+  #     # allow_anonymous true (or configure authentication)
+  #     - ./mosquitto_data/config:/mosquitto/config
+  #     - ./mosquitto_data/data:/mosquitto/data
+  #     - ./mosquitto_data/log:/mosquitto/log
+  #   restart: unless-stopped
 
-  socket-proxy:
-    image: tecnativa/docker-socket-proxy
-    container_name: mission-control-socket-proxy
-    environment:
-      # Configure for read-only access as per Section 4.4
-      - CONTAINERS=1 # Allow access to /containers endpoints (for list, inspect, logs, stats)
-      - EVENTS=1     # Allow access to /events endpoint (for real-time events)
-      - POST=0       # Crucially, disallow POST requests (no start, stop, create, etc.)
-      # Explicitly disable other potentially dangerous API sections
-      - EXEC=0
-      - BUILD=0
-      - IMAGES=0
-      - VOLUMES=0
-      - NETWORKS=0
-      - SERVICES=0
-      - SECRETS=0
-      - CONFIGS=0
-      - NODES=0
-      - SWARM=0
-      - DISTRIBUTION=0
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro # Mount the host Docker socket (read-only for the proxy itself)
-    networks:
-      - mission-control-net
-    restart: unless-stopped # Ensure the proxy restarts if it crashes
+  # --- Optional: Secure Docker Socket Proxy (if Docker widget is implemented) ---
+  # Uncomment and configure if a Docker widget is part of the application.
+  # socket-proxy:
+  #   image: "11notes/socket-proxy:stable" # Or a specific version like "11notes/socket-proxy:0.2.0"
+  #   container_name: docker_socket_proxy
+  #   read_only: true # Enforces read-only filesystem for the proxy container itself
+  #   # ⚠️ IMPORTANT: Replace 999 with the GID of your host's /var/run/docker.sock
+  #   # Find it with: stat -c '%g' /var/run/docker.sock on your Docker host.
+  #   # This grants the proxy (running as root in container) access to the docker socket group on host.
+  #   user: "0:999" # Run as root (UID 0) within the container, but with the specified host GID.
+  #   volumes:
+  #     - "/var/run/docker.sock:/var/run/docker.sock:ro" # Mount host Docker socket read-only
+  #     # If mission-control needs to connect to this proxy via a Docker network socket:
+  #     # - socket_proxy_volume:/run/proxy # Named volume for the proxy's socket (if proxy configured to output here)
+  #   restart: unless-stopped
+  #   environment:
+  #     # --- Security Configuration for the Proxy ---
+  #     # Explicitly allow ONLY what is needed. Default is to deny.
+  #     LOG_LEVEL: INFO # Set to DEBUG for more verbose logging if needed for troubleshooting proxy.
+  #
+  #     # === Read-only access examples (enable as needed) ===
+  #     EVENTS: 1       # Allow access to /events
+  #     PING: 1         # Allow access to /_ping
+  #     VERSION: 1      # Allow access to /version
+  #     INFO: 1         # Allow access to /info
+  #     IMAGES: 1       # Allow access to /images/* (GET only by default)
+  #     CONTAINERS: 1   # Allow access to /containers/* (GET only by default)
+  #     # VOLUMES: 1    # Allow access to /volumes/* (GET only by default)
+  #     # NETWORKS: 1   # Allow access to /networks/* (GET only by default)
+  #     # SECRETS: 1
+  #     # CONFIGS: 1
+  #     # NODES: 1      # For Docker Swarm
+  #     # SERVICES: 1   # For Docker Swarm
+  #     # TASKS: 1      # For Docker Swarm
+  #
+  #     # === Write access examples (USE WITH EXTREME CAUTION!) ===
+  #     # To allow specific POST requests (e.g., start/stop container):
+  #     # You might need to enable POST globally if the proxy doesn't have finer-grained control for specific paths.
+  #     # POST: 1 # Globally allows POST requests. Be very careful.
+  #     # Specific path allowance might be available depending on proxy version.
+  #     # Example for allowing start/stop/restart on containers (if proxy supports this granularity):
+  #     # POST_CONTAINERS_START: 1
+  #     # POST_CONTAINERS_ID_START: 1 # For /containers/{id}/start
+  #     # POST_CONTAINERS_ID_STOP: 1  # For /containers/{id}/stop
+  #     # POST_CONTAINERS_ID_RESTART: 1 # For /containers/{id}/restart
+  #
+  #     # By default, most write operations (POST, PUT, DELETE) are disabled if not specified.
+  #     # Always consult the documentation for the specific Docker socket proxy image you use.
 
-  mqtt:
-    image: eclipse-mosquitto:latest # Using Mosquitto as a simple MQTT broker
-    container_name: mission-control-mqtt
-    ports:
-      - "1883:1883" # Standard MQTT port
-      - "19001:9001" # WebSocket port (optional, but useful for browser clients) - Changed host port to 19001
-    volumes:
-      - mqtt_data:/mosquitto/data # Persistent data volume
-      - mqtt_log:/mosquitto/log   # Persistent log volume
-      # Add mosquitto.conf volume if custom configuration is needed
-    networks:
-      - mission-control-net
-    restart: unless-stopped
-
-volumes:
-  sqlite_data:
-  backend_config:
-  custom_widgets:
-  mqtt_data:
-  mqtt_log:
-
-networks:
-  mission-control-net:
-    driver: bridge
+# --- Optional: Named Volumes (if used by services like socket-proxy) ---
+# volumes:
+#   socket_proxy_volume: # Uncomment if socket-proxy service uses a named volume for its output socket
