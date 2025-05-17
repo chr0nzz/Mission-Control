@@ -101,7 +101,7 @@
 
 <script setup>
 import { ref, onMounted, computed, inject, watch } from 'vue';
-import { GridLayout, GridItem } from 'vue3-grid-layout'; 
+// import { GridLayout, GridItem } from 'vue3-grid-layout'; 
 
 import WidgetWrapper from '../components/widgets/WidgetWrapper.vue';
 import WidgetConfigModal from '../components/common/WidgetConfigModal.vue';

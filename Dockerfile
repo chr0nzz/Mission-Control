@@ -34,7 +34,7 @@ WORKDIR /app
 # Assuming backend and frontend have separate package.json or a root one.
 # For this example, assuming backend dependencies are managed by a root package.json
 # If backend has its own package.json at src/backend/package.json, adjust paths.
-COPY src/frontend/package.json ./
+COPY package.json ./
 RUN npm install
 # If using yarn:
 # COPY yarn.lock ./
@@ -62,7 +62,7 @@ WORKDIR /app
 # Set Node environment to production
 ENV NODE_ENV=production
 
-COPY --from=backend-builder /app/src/frontend/package-lock.json ./
+COPY --from=backend-builder /app/package-lock.json ./
 # Create a non-root user and group
 # Using 'node' user which is conventional in node base images, but often has UID 1000.
 # If your base image doesn't have 'node' user, you'd use:

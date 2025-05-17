@@ -34,37 +34,38 @@
       </div>
 
       <div class="widget-content-area p-3 sm:p-4 flex-grow min-h-[80px] relative overflow-y-auto custom-scrollbar">
-        <component
-          :is="dynamicallyLoadedComponent"
-          v-if="dynamicallyLoadedComponent"
-          :widget-id="widgetId"
-          :options="currentOptions"
-          @widget-error="handleChildDataError"
-          @widget-loading="handleChildDataLoading"
-          @widget-data-updated="handleChildDataUpdated"
-          ref="dynamicWidgetInstanceRef"
-          class="h-full"
-        />
-        <div v-else-if="componentImportAttempted && !dynamicallyLoadedComponent" class="flex justify-center items-center h-full text-xs text-red-400 p-2">
-            <i>Could not load widget component: {{ widgetType }}. Check console.</i>
-        </div>
-
-
-        <div v-if="dynamicallyLoadedComponent && isDataLoading"
-             class="absolute inset-0 flex flex-col justify-center items-center bg-white/70 dark:bg-gray-800/70 z-10 backdrop-blur-sm">
-          <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading data...</p>
-        </div>
-        <div v-if="dynamicallyLoadedComponent && dataError"
-             class="absolute inset-0 flex flex-col justify-center items-center text-center p-2 bg-red-50/80 dark:bg-red-900/50 z-10 backdrop-blur-sm">
-          <span class="material-icons text-red-500 dark:text-red-400 text-3xl">error_outline</span>
-          <p class="mt-1 text-xs text-red-600 dark:text-red-300">
-            {{ dataErrorMessage || 'Error loading widget data.' }}
-          </p>
-          <button @click="triggerChildRetry" class="mt-2 px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded">
-            Retry Data
-          </button>
-        </div>
+        <template>
+          <div v-if="dynamicallyLoadedComponent">
+            <component
+              :is="dynamicallyLoadedComponent"
+              :widget-id="widgetId"
+              :options="currentOptions"
+              @widget-error="handleChildDataError"
+              @widget-loading="handleChildDataLoading"
+              @widget-data-updated="handleChildDataUpdated"
+              ref="dynamicWidgetInstanceRef"
+              class="h-full"
+            />
+          </div>
+          <div v-else-if="componentImportAttempted && !dynamicallyLoadedComponent" class="flex justify-center items-center h-full text-xs text-red-400 p-2">
+              <i>Could not load widget component: {{ widgetType }}. Check console.</i>
+          </div>
+          <div v-if="dynamicallyLoadedComponent && isDataLoading"
+               class="absolute inset-0 flex flex-col justify-center items-center bg-white/70 dark:bg-gray-800/70 z-10 backdrop-blur-sm">
+            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading data...</p>
+          </div>
+          <div v-if="dynamicallyLoadedComponent && dataError"
+               class="absolute inset-0 flex flex-col justify-center items-center text-center p-2 bg-red-50/80 dark:bg-red-900/50 z-10 backdrop-blur-sm">
+            <span class="material-icons text-red-500 dark:text-red-400 text-3xl">error_outline</span>
+            <p class="mt-1 text-xs text-red-600 dark:text-red-300">
+              {{ dataErrorMessage || 'Error loading widget data.' }}
+            </p>
+            <button @click="triggerChildRetry" class="mt-2 px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded">
+              Retry Data
+            </button>
+          </div>
+        </template>
       </div>
     </div>
   </div>
