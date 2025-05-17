@@ -292,6 +292,12 @@ const mqttService = {
  * Internal helper to create and set up a new MQTT client instance.
  */
 function connectNew(brokerUrl, options, resolve, reject) {
+    if (!brokerUrl) {
+        console.log('[MQTTService] Broker URL not provided. Skipping MQTT client initialization.');
+        resolve();
+        return;
+    }
+
     console.log(`[MQTTService] Initializing new MQTT client instance for ${brokerUrl}`);
     client = mqtt.connect(brokerUrl, options);
 
