@@ -1,6 +1,6 @@
 <template>
   <div :data-widget-id="widgetId"
-       class="widget-wrapper-container h-full w-full" 
+       class="widget-wrapper-container h-full w-full"
        :class="{ 'is-dragging-placeholder-style': isDragging }"> {/* Apply a style if isDragging prop is true */}
     <div class="widget-wrapper-content bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col h-full transition-all duration-150 ease-in-out">
       <div class="widget-header flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
@@ -50,16 +50,16 @@
 
         <component
           :is="loadedWidgetComponent"
-          v_if="loadedWidgetComponent && !error && !componentLoadFailed && !(isLoading && !refreshInitiated)"
+          v-if="loadedWidgetComponent && !error && !componentLoadFailed && !(isLoading && !refreshInitiated)"
           :widget-id="widgetId"
           :options="currentOptions"
           @widget-error="handleWidgetError"
           @widget-loading="handleWidgetLoading"
           @widget-data-updated="handleWidgetDataUpdated"
           ref="dynamicWidgetRef"
-          class="h-full" 
+          class="h-full"
         />
-        <div v-else-if="!loadedWidgetComponent && !isLoading && !error && !componentLoadFailed" class="text-center text-gray-500 dark:text-gray-400 text-sm py-4">
+        <div v-if="!loadedWidgetComponent && !isLoading && !error && !componentLoadFailed" class="text-center text-gray-500 dark:text-gray-400 text-sm py-4">
           Widget type "{{ widgetType }}" not found or is not yet loaded.
         </div>
       </div>
@@ -157,7 +157,7 @@ const requestRemove = () => {
 };
 
 const retryDataFetch = () => {
-  error.value = null; 
+  error.value = null;
   componentLoadFailed.value = false;
   errorMessage.value = '';
   if (!loadedWidgetComponent.value || componentLoadFailed.value) { // If component itself failed to load
@@ -202,7 +202,7 @@ const hasRefresh = computed(() => {
 const hasConfigurableOptions = computed(() => {
     // This could be more sophisticated if widgets declare if they have options.
     // For now, assume all might have options or a label to configure.
-    return true; 
+    return true;
 });
 
 
@@ -211,7 +211,7 @@ const refreshWidgetData = () => {
     console.log(`WidgetWrapper: Refreshing data for ${props.widgetId}`);
     isLoading.value = true; // Show spinner on refresh button or main loader
     refreshInitiated.value = true;
-    error.value = null; 
+    error.value = null;
     componentLoadFailed.value = false;
     errorMessage.value = '';
     dynamicWidgetRef.value.fetchData();
@@ -231,7 +231,7 @@ defineExpose({
     /* Adding a subtle border or effect when being dragged by vue-grid-layout */
 }
 .widget-wrapper-container.is-dragging-placeholder-style { /* Conceptual class name */
-    /* outline: 2px dashed #4f46e5; 
+    /* outline: 2px dashed #4f46e5;
     outline-offset: -2px; */
 }
 
@@ -258,4 +258,3 @@ defineExpose({
   font-size: 18px; /* Adjust action icon size */
 }
 </style>
-
