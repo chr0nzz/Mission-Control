@@ -1,6 +1,6 @@
 // src/frontend/src/main.js
 
-import { createApp } from 'vue';
+import { createApp, ref } from 'vue';
 import App from './App.vue';
 // Optional: Import a router if you plan to have multiple views/pages
 // import router from './router';
