@@ -1,3 +1,7 @@
+<style scoped>
+@import 'vue3-grid-layout/dist/style.css';
+</style>
+
 <template>
   <div class="dashboard-view p-0 md:p-2">
     <div v-if="isLoading" class="flex justify-center items-center h-64">
