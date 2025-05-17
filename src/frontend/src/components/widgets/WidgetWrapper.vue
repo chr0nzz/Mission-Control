@@ -1,7 +1,7 @@
 <template>
   <div :data-widget-id="widgetId"
        class="widget-wrapper-container h-full w-full"
-       :class="{ 'is-dragging-placeholder-style': isDragging }"> {/* Apply a style if isDragging prop is true */}
+       :class="{ 'is-dragging-placeholder-style': isDragging }">
     <div class="widget-wrapper-content bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col h-full transition-all duration-150 ease-in-out">
       <div class="widget-header flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
         <div class="flex items-center truncate">
@@ -15,10 +15,10 @@
           </h3>
         </div>
         <div class="widget-actions flex items-center space-x-1 sm:space-x-2">
-          <button v-if="!isEditing && hasRefresh" @click="refreshWidgetData" :disabled="isLoading"
+          <button v-if="!isEditing && hasRefreshMethod" @click="triggerChildRefresh" :disabled="isDataLoading"
                   class="p-1 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none"
                   title="Refresh widget data">
-            <span class="material-icons text-lg" :class="{ 'animate-spin': isLoading && refreshInitiated }">refresh</span>
+            <span class="material-icons text-lg" :class="{ 'animate-spin': isDataLoading && refreshButtonInitiated }">refresh</span>
           </button>
           <button v-if="isEditing || hasConfigurableOptions" @click="openConfigurationModal"
                   class="p-1 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none"
@@ -34,33 +34,36 @@
       </div>
 
       <div class="widget-content-area p-3 sm:p-4 flex-grow min-h-[80px] relative overflow-y-auto custom-scrollbar">
-        <div v-if="isLoading && !refreshInitiated && !componentLoadFailed" class="absolute inset-0 flex flex-col justify-center items-center bg-white/50 dark:bg-gray-800/50 z-10">
-          <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading...</p>
-        </div>
-        <div v-if="error || componentLoadFailed" class="absolute inset-0 flex flex-col justify-center items-center text-center p-2 bg-red-50 dark:bg-red-900/30 z-10">
-          <span class="material-icons text-red-500 dark:text-red-400 text-3xl">error_outline</span>
-          <p class="mt-1 text-xs text-red-600 dark:text-red-300">
-            {{ componentLoadFailed ? 'Widget component failed to load.' : (errorMessage || 'Error loading data.') }}
-          </p>
-          <button @click="retryDataFetch" class="mt-2 px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded">
-            Retry
-          </button>
-        </div>
-
         <component
-          :is="loadedWidgetComponent"
-          v-if="loadedWidgetComponent && !error && !componentLoadFailed && !(isLoading && !refreshInitiated)"
+          :is="dynamicallyLoadedComponent"
+          v-if="dynamicallyLoadedComponent"
           :widget-id="widgetId"
           :options="currentOptions"
-          @widget-error="handleWidgetError"
-          @widget-loading="handleWidgetLoading"
-          @widget-data-updated="handleWidgetDataUpdated"
-          ref="dynamicWidgetRef"
+          @widget-error="handleChildDataError"
+          @widget-loading="handleChildDataLoading"
+          @widget-data-updated="handleChildDataUpdated"
+          ref="dynamicWidgetInstanceRef"
           class="h-full"
         />
-        <div v-if="!loadedWidgetComponent && !isLoading && !error && !componentLoadFailed" class="text-center text-gray-500 dark:text-gray-400 text-sm py-4">
-          Widget type "{{ widgetType }}" not found or is not yet loaded.
+        <div v-else-if="componentImportAttempted && !dynamicallyLoadedComponent" class="flex justify-center items-center h-full text-xs text-red-400 p-2">
+            <i>Could not load widget component: {{ widgetType }}. Check console.</i>
+        </div>
+
+
+        <div v-if="dynamicallyLoadedComponent && isDataLoading"
+             class="absolute inset-0 flex flex-col justify-center items-center bg-white/70 dark:bg-gray-800/70 z-10 backdrop-blur-sm">
+          <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading data...</p>
+        </div>
+        <div v-if="dynamicallyLoadedComponent && dataError"
+             class="absolute inset-0 flex flex-col justify-center items-center text-center p-2 bg-red-50/80 dark:bg-red-900/50 z-10 backdrop-blur-sm">
+          <span class="material-icons text-red-500 dark:text-red-400 text-3xl">error_outline</span>
+          <p class="mt-1 text-xs text-red-600 dark:text-red-300">
+            {{ dataErrorMessage || 'Error loading widget data.' }}
+          </p>
+          <button @click="triggerChildRetry" class="mt-2 px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded">
+            Retry Data
+          </button>
         </div>
       </div>
     </div>
@@ -75,58 +78,78 @@ const props = defineProps({
   widgetType: { type: String, required: true },
   widgetOptions: { type: Object, default: () => ({}) },
   isEditing: { type: Boolean, default: false },
-  isDragging: { type: Boolean, default: false } // New prop to indicate if item is being dragged by grid library
+  isDragging: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['configure-widget', 'request-remove']);
 
-const isLoading = ref(false); // For data loading within the widget, or initial component load
-const error = ref(null);    // For data loading errors within the widget
-const errorMessage = ref('');
-const componentLoadFailed = ref(false); // Specifically for dynamic component import failure
+// State for data operations of the child widget
+const isDataLoading = ref(false);
+const dataError = ref(false);
+const dataErrorMessage = ref('');
 
 const currentOptions = ref(JSON.parse(JSON.stringify(props.widgetOptions)));
-const loadedWidgetComponent = shallowRef(null);
-const dynamicWidgetRef = ref(null); // Ref to the dynamic component instance
-const refreshInitiated = ref(false); // To differentiate initial load from manual refresh spin
+const dynamicallyLoadedComponent = shallowRef(null);
+const dynamicWidgetInstanceRef = ref(null); // Ref to the dynamic component instance
+const refreshButtonInitiated = ref(false); // For refresh button spinner
+const componentImportAttempted = ref(false); // Flag to know if we tried to load the component
 
 const widgetTitle = computed(() => {
   return currentOptions.value.customLabel || props.widgetType.replace('Widget', '') || 'Widget';
 });
 
-const loadWidgetComponent = async () => {
-  isLoading.value = true; // Indicate loading while component is being imported
-  error.value = null;
-  componentLoadFailed.value = false;
-  errorMessage.value = '';
-  try {
-    // Dynamically import the widget component based on widgetType
-    // Assuming widget components are in src/components/widgets/builtin/
-    // The name should match the file name, e.g., GlancesWidget.vue for "GlancesWidget" type
-    const component = defineAsyncComponent({
-      loader: () => import(`./builtin/${props.widgetType}.vue`),
-      loadingComponent: { // Optional: A simple component to show during async load
-        template: '<div class="flex justify-center items-center h-full text-xs text-gray-400"><i>Loading component...</i></div>'
-      },
-      errorComponent: { // Optional: Component to show if async load fails
-        template: '<div class="flex justify-center items-center h-full text-xs text-red-400 p-2"><i>Error loading widget component.</i></div>'
-      },
-      timeout: 15000, // Timeout for loading component
-      // onError(err, retry, fail, attempts) handled by catch below
-    });
-    loadedWidgetComponent.value = component;
-  } catch (err) {
-    console.error(`WidgetWrapper: Failed to start loading component for widget type "${props.widgetType}":`, err);
-    error.value = true; // Generic error flag
-    componentLoadFailed.value = true; // Specific flag for component load failure
-    errorMessage.value = `Could not load widget component: ${props.widgetType}. ${err.message}`;
-    loadedWidgetComponent.value = null;
-  } finally {
-    // isLoading.value = false; // Let the async component's loading/error state manage this primarily
-    // The defineAsyncComponent itself has loading/error states.
-    // We set isLoading to true initially, and the child widget (or defineAsyncComponent's states) should manage it further.
-    // If the import itself fails, the catch block handles it.
+// Component to show while the async widget is loading
+const AsyncLoadingComponent = {
+  template: '<div class="flex justify-center items-center h-full text-sm text-gray-400 dark:text-gray-500"><div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-gray-300 mr-2"></div><i>Loading widget...</i></div>'
+};
+
+// Component to show if the async widget fails to load
+const AsyncErrorComponent = {
+  props: ['errorMsg'],
+  template: '<div class="flex flex-col justify-center items-center h-full text-xs text-red-500 dark:text-red-400 p-2"><span class="material-icons text-xl">warning</span><span>{{ errorMsg }}</span><span class="mt-1">Cannot load component: {{ widgetType }}</span></div>',
+  setup(props) {
+    // Access widgetType from the outer scope (WidgetWrapper's props)
+    // This is a bit of a hack for setup components; normally use props for error component too.
+    // For simplicity, we'll rely on the outer widgetType.
+    return { widgetType: props.widgetType }; // Make widgetType available if passed as prop
   }
+};
+
+
+const loadWidgetComponent = () => {
+  console.log(`WidgetWrapper (${props.widgetId}): Attempting to load component type: ${props.widgetType}`);
+  componentImportAttempted.value = true;
+  isDataLoading.value = false; // Reset data states
+  dataError.value = false;
+  dataErrorMessage.value = '';
+
+  if (!props.widgetType) {
+    console.error(`WidgetWrapper (${props.widgetId}): widgetType is undefined or empty.`);
+    dynamicallyLoadedComponent.value = shallowRef({ template: '<div class="text-red-500 p-2 text-xs">Error: Widget type is missing.</div>' });
+    return;
+  }
+
+  dynamicallyLoadedComponent.value = defineAsyncComponent({
+    loader: () => import(`./builtin/${props.widgetType}.vue`)
+      .catch(err => {
+        console.error(`WidgetWrapper (${props.widgetId}): Failed to import component module for "${props.widgetType}":`, err);
+        // Return a component that displays the error, or throw to use errorComponent
+        return { template: `<div class="text-red-500 p-2 text-xs">Error loading ${props.widgetType}: ${err.message}. Check console.</div>` };
+      }),
+    loadingComponent: AsyncLoadingComponent,
+    errorComponent: { // More specific error component for import failure
+        props: { error: Object, widgetTypeOuter: String }, // widgetTypeOuter to avoid conflict
+        template: `<div class="flex flex-col justify-center items-center h-full text-xs text-red-500 dark:text-red-400 p-2">
+                     <span class="material-icons text-xl">error</span>
+                     <span>Failed to load component: <strong>{{ widgetTypeOuter }}</strong></span>
+                     <span class="mt-1 text-gray-400 text-xxs">{{ error?.message }}</span>
+                   </div>`,
+        setup(props) { return { error: props.error, widgetTypeOuter: props.widgetTypeOuter }; } // Pass widgetType here
+    },
+    delay: 200, // Show loading component after 200ms
+    timeout: 15000, // Timeout for loading
+    // onError: (error, retry, fail, attempts) => { ... } // Can be used for more complex error handling/retry logic for component load
+  });
 };
 
 onMounted(() => {
@@ -137,14 +160,12 @@ watch(() => props.widgetOptions, (newOptions) => {
   currentOptions.value = JSON.parse(JSON.stringify(newOptions));
 }, { deep: true, immediate: true });
 
-
 watch(() => props.widgetType, (newType, oldType) => {
   if (newType !== oldType) {
     console.log(`WidgetWrapper (${props.widgetId}): Type changed from ${oldType} to ${newType}. Reloading component.`);
     loadWidgetComponent();
   }
 });
-
 
 const openConfigurationModal = () => {
   emit('configure-widget', { widgetId: props.widgetId, currentOptions: currentOptions.value });
@@ -156,93 +177,77 @@ const requestRemove = () => {
   }
 };
 
-const retryDataFetch = () => {
-  error.value = null;
-  componentLoadFailed.value = false;
-  errorMessage.value = '';
-  if (!loadedWidgetComponent.value || componentLoadFailed.value) { // If component itself failed to load
-    loadWidgetComponent();
-  } else if (dynamicWidgetRef.value && typeof dynamicWidgetRef.value.fetchData === 'function') {
-    dynamicWidgetRef.value.fetchData(); // Call child's fetchData method
+// This is now primarily for retrying data fetching *within* the child
+const triggerChildRetry = () => {
+  dataError.value = false;
+  dataErrorMessage.value = '';
+  if (dynamicWidgetInstanceRef.value && typeof dynamicWidgetInstanceRef.value.fetchData === 'function') {
+    dynamicWidgetInstanceRef.value.fetchData();
   } else {
-    console.warn(`WidgetWrapper (${props.widgetId}): Retry called, but no fetchData method on child or component not loaded.`);
+    console.warn(`WidgetWrapper (${props.widgetId}): Retry data fetch called, but no fetchData method on child or child not loaded.`);
+    // If component itself failed to load, retrying data won't help. User should fix component type.
+    // loadWidgetComponent(); // This might be too aggressive if it was a data error.
   }
 };
 
-// Event handlers for events emitted by the dynamically loaded widget
-const handleWidgetError = (errPayload) => {
-  error.value = true;
-  componentLoadFailed.value = false; // This is a data error, not component load error
-  errorMessage.value = typeof errPayload === 'string' ? errPayload : (errPayload?.message || 'An error occurred in the widget.');
-  isLoading.value = false;
-  refreshInitiated.value = false;
+// Event handlers for data states from the child widget
+const handleChildDataError = (errPayload) => {
+  dataError.value = true;
+  dataErrorMessage.value = typeof errPayload === 'string' ? errPayload : (errPayload?.message || 'An error occurred fetching widget data.');
+  isDataLoading.value = false;
+  refreshButtonInitiated.value = false;
 };
 
-const handleWidgetLoading = (loadingState) => {
-  if (!refreshInitiated.value) { // Only update main isLoading if not a manual refresh
-    isLoading.value = loadingState;
-  }
-  if (!loadingState) { // If loading finishes (successfully or not from child's perspective)
-      refreshInitiated.value = false; // Reset refresh flag
+const handleChildDataLoading = (loadingState) => {
+  isDataLoading.value = loadingState;
+  if (!loadingState) {
+      refreshButtonInitiated.value = false;
   }
 };
 
-const handleWidgetDataUpdated = () => {
-  isLoading.value = false;
-  error.value = null;
-  componentLoadFailed.value = false;
-  errorMessage.value = '';
-  refreshInitiated.value = false;
+const handleChildDataUpdated = () => {
+  isDataLoading.value = false;
+  dataError.value = false;
+  dataErrorMessage.value = '';
+  refreshButtonInitiated.value = false;
 };
 
-const hasRefresh = computed(() => {
-    return loadedWidgetComponent.value && dynamicWidgetRef.value && typeof dynamicWidgetRef.value.fetchData === 'function';
+const hasRefreshMethod = computed(() => {
+    return dynamicWidgetInstanceRef.value && typeof dynamicWidgetInstanceRef.value.fetchData === 'function';
 });
 
 const hasConfigurableOptions = computed(() => {
-    // This could be more sophisticated if widgets declare if they have options.
-    // For now, assume all might have options or a label to configure.
-    return true;
+    return true; 
 });
 
-
-const refreshWidgetData = () => {
-  if (hasRefresh.value) {
+const triggerChildRefresh = () => {
+  if (hasRefreshMethod.value) {
     console.log(`WidgetWrapper: Refreshing data for ${props.widgetId}`);
-    isLoading.value = true; // Show spinner on refresh button or main loader
-    refreshInitiated.value = true;
-    error.value = null;
-    componentLoadFailed.value = false;
-    errorMessage.value = '';
-    dynamicWidgetRef.value.fetchData();
+    refreshButtonInitiated.value = true; // For spinner on button
+    // isDataLoading.value = true; // Child will emit its own loading state
+    dataError.value = false; 
+    dataErrorMessage.value = '';
+    dynamicWidgetInstanceRef.value.fetchData();
   }
 };
 
-// Expose methods to parent if needed (e.g., for direct refresh call from DashboardView)
 defineExpose({
-  refreshWidgetData,
+  refreshData: triggerChildRefresh, // Expose a consistent method name
 });
 
 </script>
 
 <style scoped>
 .widget-wrapper-container {
-    /* This outer container is the direct child of GridItem, should be h-full w-full */
-    /* Adding a subtle border or effect when being dragged by vue-grid-layout */
+    /* Styles for the outer container if needed */
 }
-.widget-wrapper-container.is-dragging-placeholder-style { /* Conceptual class name */
-    /* outline: 2px dashed #4f46e5;
-    outline-offset: -2px; */
-}
-
 .widget-wrapper-content {
   display: flex;
   flex-direction: column;
 }
-
 .widget-content-area {
   flex-grow: 1;
-  min-height: 80px; /* Ensure a minimum tappable/visible area */
+  min-height: 80px;
 }
 .widget-content-area.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
 .widget-content-area.custom-scrollbar::-webkit-scrollbar-track { @apply bg-gray-100 dark:bg-gray-700/50 rounded-full; }
