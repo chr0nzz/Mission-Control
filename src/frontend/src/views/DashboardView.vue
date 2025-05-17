@@ -1,5 +1,4 @@
 <style scoped>
-@import 'vue3-grid-layout/dist/style.css';
 </style>
 
 <template>
