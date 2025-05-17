@@ -1,25 +1,30 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'node:url'
+import path from 'node:path'
 
 export default defineConfig({
-  plugins: [
-    vue({
-      template: {
-        compilerOptions: {
-          isCustomElement: (tag) => tag.startsWith('grid-')
-        }
-      }
-    })
-  ],
-  server: {
+  plugins: [vue()],
+  
+server: {
     port: 54168,
     host: '0.0.0.0',
     allowedHosts: true,
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': path.resolve(__dirname, './src'),
+    }
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "vue3-grid-layout/dist/style.css";`
+      }
+    }
+  },
+  build: {
+    rollupOptions: {
+      external: ['vue-grid-layout/dist/vue-grid-layout.css'],
     }
   }
 })
