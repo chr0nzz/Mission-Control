@@ -3,7 +3,13 @@ import vue from '@vitejs/plugin-vue'
 import path from 'node:path'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.startsWith('grid-')
+        }
+      }
+    })],
   
 server: {
     port: 54168,
