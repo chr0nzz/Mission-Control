@@ -31,6 +31,13 @@ server: {
   build: {
     rollupOptions: {
       external: ['vue-grid-layout/dist/vue-grid-layout.css'],
+      plugins: [
+        require('rollup-plugin-postcss')({
+          modules: true,
+          extract: true,
+          minimize: true,
+        })
+      ]
     }
   }*/
 })

@@ -3,7 +3,7 @@
 
 import { createApp, ref } from 'vue';
 import App from './App.vue'
-import 'vue-grid-layout/dist/vue-grid-layout.css';
+
 // Optional: Import a router if you plan to have multiple views/pages
 // import router from './router';
 
