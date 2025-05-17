@@ -1,3 +1,4 @@
+import 'vue3-grid-layout/dist/vue-grid-layout.css';
 // src/frontend/src/main.js
 
 import { createApp, ref } from 'vue';
