@@ -74,7 +74,6 @@ ENV NODE_ENV=production
 
 # Copy necessary files from backend-builder stage
 COPY --from=backend-builder /app/package.json ./
-COPY --from=backend-builder /app/package-lock.json ./
 # If using yarn:
 # COPY --from=backend-builder /app/yarn.lock ./
 
